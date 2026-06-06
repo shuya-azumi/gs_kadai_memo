@@ -61,8 +61,15 @@
     <!-- ここに追加データが挿入される -->
   </ul>
 
+  <!-- ===== 右下に固定表示するデジタルタイマー ===== -->
+  <div id="floatingTimer" class="floating-timer">
+    <div class="ft-label">▶ 計測中</div>
+    <div class="ft-name" id="ftName">タスク名</div>
+    <div class="ft-clock" id="ftClock">00:00:00</div>
+  </div>
+
   <footer>
-    G's academy / js_02_memo kadai
+    🤖 Built with <a href="https://claude.com/claude-code" target="_blank" rel="noopener">Claude Code</a>
   </footer>
 
   <!-- ===== JavaScript ===== -->
@@ -294,7 +301,8 @@
 
 
     // -----------------------------------------
-    // 3b. リアルタイムタイマー（doing中の実績を1秒ごとに更新）
+    // 3b. リアルタイムタイマー
+    //     doing中のタスクを探して、右下の時計と一覧の実績を更新
     // -----------------------------------------
     function restartTick() {
       // 既存のタイマーを止める
@@ -303,24 +311,61 @@
         tickTimer = null;
       }
 
-      // doing 中のタスクがあるかチェック
-      let hasDoing = false;
+      // doing 中のタスクを探す
+      let doingName = "";
+      let doingStartTime = 0;
+      let doingActualSec = 0;
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
         if (key.indexOf("task_") !== 0) continue;
         const parts = localStorage.getItem(key).split(",");
         if (parts[3] === "doing") {
-          hasDoing = true;
+          doingName = parts[0];
+          doingStartTime = parseInt(parts[4]);
+          doingActualSec = parseInt(parts[5]);
           break;
         }
       }
 
-      // doing があれば1秒ごとに再描画
-      if (hasDoing) {
-        tickTimer = setInterval(function () {
-          redraw();
-        }, 1000);
+      // doingがなければフローティング時計を隠して終了
+      if (doingName === "") {
+        $("#floatingTimer").removeClass("active");
+        return;
       }
+
+      // フローティング時計を表示
+      $("#floatingTimer").addClass("active");
+      $("#ftName").text(doingName);
+      updateClock(doingStartTime, doingActualSec);
+
+      // 1秒ごとにフローティング時計を更新
+      // 10秒ごとに一覧全体を再描画（差分や集計バーも更新するため）
+      let tickCount = 0;
+      tickTimer = setInterval(function () {
+        tickCount++;
+        updateClock(doingStartTime, doingActualSec);
+        if (tickCount % 10 === 0) {
+          redraw();
+        }
+      }, 1000);
+    }
+
+
+    // 経過時間を HH:MM:SS で表示
+    function updateClock(startTime, baseSec) {
+      const elapsedSec = Math.floor((new Date().getTime() - startTime) / 1000);
+      const totalSec = baseSec + elapsedSec;
+      const h = Math.floor(totalSec / 3600);
+      const m = Math.floor((totalSec % 3600) / 60);
+      const s = totalSec % 60;
+      const hh = String(h).padStart(2, "0");
+      const mm = String(m).padStart(2, "0");
+      const ss = String(s).padStart(2, "0");
+      $("#ftClock").text(hh + ":" + mm + ":" + ss);
+
+      // 一覧側の実績表示も同期更新（doing行のみ）
+      const actualMin = (totalSec / 60).toFixed(1);
+      $("#list li.status-doing .actual-display").text(actualMin);
     }
 
 

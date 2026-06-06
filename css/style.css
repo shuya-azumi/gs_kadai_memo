@@ -418,9 +418,94 @@ input {
 
 footer {
     margin-top: 30px;
+    margin-bottom: 100px; /* フローティング時計と被らないよう余白 */
     border-top: 1px solid var(--border);
     padding: 20px 0;
     text-align: center;
     color: var(--text-sub);
     font-size: 14px;
+}
+
+footer a {
+    color: var(--total-accent);
+    text-decoration: none;
+    font-weight: bold;
+}
+
+footer a:hover {
+    text-decoration: underline;
+}
+
+/* ===================================
+   右下のフローティングデジタルタイマー
+   =================================== */
+.floating-timer {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    min-width: 240px;
+    padding: 16px 20px;
+    background: #1a1a1f;
+    color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    z-index: 100;
+    border: 2px solid #ff9800;
+    opacity: 0;
+    transform: translateY(20px);
+    pointer-events: none;
+    transition: opacity 0.3s, transform 0.3s;
+}
+
+.floating-timer.active {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+    animation: ftGlow 2s ease-in-out infinite;
+}
+
+@keyframes ftGlow {
+    0%, 100% { box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), 0 0 0 0 rgba(255, 152, 0, 0.6); }
+    50%      { box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), 0 0 0 8px rgba(255, 152, 0, 0); }
+}
+
+.ft-label {
+    font-size: 12px;
+    color: #ff9800;
+    font-weight: bold;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+}
+
+.ft-name {
+    font-size: 14px;
+    color: #ccc;
+    margin-bottom: 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 220px;
+}
+
+.ft-clock {
+    font-family: "SF Mono", "Consolas", "Courier New", monospace;
+    font-size: 38px;
+    font-weight: bold;
+    color: #ffeb3b;
+    letter-spacing: 2px;
+    text-shadow: 0 0 12px rgba(255, 235, 59, 0.4);
+    line-height: 1;
+}
+
+/* スマホ対応：小さく */
+@media (max-width: 600px) {
+    .floating-timer {
+        right: 12px;
+        bottom: 12px;
+        min-width: 180px;
+        padding: 12px 14px;
+    }
+    .ft-clock {
+        font-size: 28px;
+    }
 }
