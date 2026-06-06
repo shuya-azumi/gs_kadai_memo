@@ -10,8 +10,13 @@
 </head>
 
 <body>
-  <h1>🕐 Task Timer</h1>
-  <p class="subtitle">今日やることを登録して、ボタンひとつで時間を記録しよう</p>
+  <header class="app-header">
+    <div>
+      <h1>🕐 Task Timer</h1>
+      <p class="subtitle">今日やることを登録して、ボタンひとつで時間を記録しよう</p>
+    </div>
+    <button id="themeToggle" class="theme-toggle">🌙</button>
+  </header>
 
   <main>
     <!-- ===== 入力エリア ===== -->
@@ -19,10 +24,10 @@
       <input id="taskName" type="text" placeholder="タスク名（例：資料作成）">
       <input id="estimate" type="number" placeholder="予定(分)" min="1" value="30">
       <select id="category">
-        <option value="作業">作業</option>
-        <option value="会議">会議</option>
-        <option value="雑務">雑務</option>
-        <option value="休憩">休憩</option>
+        <option value="作業">💼 作業</option>
+        <option value="会議">🤝 会議</option>
+        <option value="雑務">📦 雑務</option>
+        <option value="休憩">☕ 休憩</option>
       </select>
     </div>
 
@@ -42,6 +47,12 @@
       <span>📊 本日合計：</span>
       <span>予定 <b id="totalEstimate">0</b> 分</span>
       <span>/ 実績 <b id="totalActual">0</b> 分</span>
+    </div>
+
+    <!-- ===== 種別ごとの集計バー ===== -->
+    <div class="summary-area">
+      <h3>📈 種別ごとの集計（実績）</h3>
+      <div id="categoryBars"></div>
     </div>
   </main>
 
@@ -65,6 +76,17 @@
     //         例: "資料作成,60,作業,todo,0,0,manual"
     // 状態 : todo / doing / done
     // ============================================
+
+    // 種別の絵文字アイコン
+    const CATEGORY_ICONS = {
+      "作業": "💼",
+      "会議": "🤝",
+      "雑務": "📦",
+      "休憩": "☕"
+    };
+
+    // リアルタイムタイマー用の変数
+    let tickTimer = null;
 
 
     // -----------------------------------------
@@ -102,7 +124,15 @@
     // -----------------------------------------
     $("#clear").on("click", function () {
       if (confirm("本当に全部削除しますか？")) {
-        localStorage.clear();
+        // task_で始まるものだけ削除（テーマ設定など他のデータを残す）
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          if (k.indexOf("task_") === 0) keysToRemove.push(k);
+        }
+        for (let i = 0; i < keysToRemove.length; i++) {
+          localStorage.removeItem(keysToRemove[i]);
+        }
         redraw();
       }
     });
@@ -119,11 +149,14 @@
       let nextTaskName = "なし";
       let nextFound = false;
 
+      // 種別ごとの集計用
+      const categoryStats = {};
+
       // localStorageから全件取り出して表示
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
 
-        // 「task_」で始まるkeyだけ対象にする（他のデータが混ざっても安全）
+        // 「task_」で始まるkeyだけ対象にする
         if (key.indexOf("task_") !== 0) {
           continue;
         }
@@ -136,11 +169,17 @@
         const status = parts[3];               // todo/doing/done
         const startTime = parseInt(parts[4]);  // 開始時刻(ミリ秒)
         const actualSec = parseInt(parts[5]);  // 実績(秒)
-        // const source = parts[6];           // Phase2で使う
 
         // 合計集計
         totalEstimate += estimate;
         totalActualSec += actualSec;
+
+        // 種別ごとの集計
+        if (!categoryStats[category]) {
+          categoryStats[category] = { actualSec: 0, estimateMin: 0 };
+        }
+        categoryStats[category].actualSec += actualSec;
+        categoryStats[category].estimateMin += estimate;
 
         // 「次のタスク」= 最初のtodo
         if (status === "todo" && nextFound === false) {
@@ -158,17 +197,39 @@
           buttonHtml = `<span class="done-mark">✅ 完了</span>`;
         }
 
-        // 実績の表示（秒→分に直す。小数1桁）
-        const actualMin = (actualSec / 60).toFixed(1);
+        // 実績の表示（doing中はリアルタイムで経過分を加算）
+        let displayActualSec = actualSec;
+        if (status === "doing" && startTime > 0) {
+          const elapsedSec = Math.floor((new Date().getTime() - startTime) / 1000);
+          displayActualSec = actualSec + elapsedSec;
+        }
+        const actualMin = (displayActualSec / 60).toFixed(1);
+
+        // 予定vs実績の差分を計算（doing/done のみ）
+        let diffHtml = "";
+        if (status !== "todo") {
+          const diffMin = (displayActualSec / 60) - estimate;
+          if (diffMin > 0.5) {
+            diffHtml = `<span class="diff over">+${diffMin.toFixed(1)}分 ⚠️</span>`;
+          } else if (diffMin < -0.5) {
+            diffHtml = `<span class="diff under">${diffMin.toFixed(1)}分 ✨</span>`;
+          } else {
+            diffHtml = `<span class="diff zero">±0分</span>`;
+          }
+        }
+
+        // 種別アイコン
+        const icon = CATEGORY_ICONS[category] || "📝";
 
         const html = `
-          <li class="status-${status}">
+          <li class="status-${status}" data-key="${key}">
             <div class="task-main">
-              <span class="cat cat-${category}">${category}</span>
+              <span class="cat cat-${category}">${icon} ${category}</span>
               <span class="name">${name}</span>
             </div>
             <div class="task-time">
-              予定 <b>${estimate}</b> 分 / 実績 <b>${actualMin}</b> 分
+              予定 <b>${estimate}</b>分 / 実績 <b class="actual-display">${actualMin}</b>分
+              ${diffHtml}
             </div>
             <div class="task-action">
               ${buttonHtml}
@@ -183,12 +244,88 @@
       $("#totalEstimate").text(totalEstimate);
       $("#totalActual").text((totalActualSec / 60).toFixed(1));
       $("#nextTaskName").text(nextTaskName);
+
+      // 種別ごとの集計バーを描画
+      renderCategoryBars(categoryStats);
+
+      // リアルタイム更新タイマーの再起動
+      restartTick();
+    }
+
+
+    // -----------------------------------------
+    // 3a. 種別ごとの集計バー描画
+    // -----------------------------------------
+    function renderCategoryBars(categoryStats) {
+      $("#categoryBars").empty();
+
+      // 最大値を求める（バーの長さ基準）
+      let maxSec = 0;
+      for (const cat in categoryStats) {
+        if (categoryStats[cat].actualSec > maxSec) {
+          maxSec = categoryStats[cat].actualSec;
+        }
+      }
+
+      if (maxSec === 0) {
+        $("#categoryBars").append('<div class="bar-empty">まだ実績がありません</div>');
+        return;
+      }
+
+      // 種別ごとにバーを描画
+      for (const cat in categoryStats) {
+        const stat = categoryStats[cat];
+        const minutes = (stat.actualSec / 60).toFixed(1);
+        const percent = (stat.actualSec / maxSec) * 100;
+        const icon = CATEGORY_ICONS[cat] || "📝";
+
+        const barHtml = `
+          <div class="bar-row">
+            <div class="bar-label">${icon} ${cat}</div>
+            <div class="bar-track">
+              <div class="bar-fill cat-${cat}" style="width:${percent}%"></div>
+            </div>
+            <div class="bar-value">${minutes}分</div>
+          </div>
+        `;
+        $("#categoryBars").append(barHtml);
+      }
+    }
+
+
+    // -----------------------------------------
+    // 3b. リアルタイムタイマー（doing中の実績を1秒ごとに更新）
+    // -----------------------------------------
+    function restartTick() {
+      // 既存のタイマーを止める
+      if (tickTimer !== null) {
+        clearInterval(tickTimer);
+        tickTimer = null;
+      }
+
+      // doing 中のタスクがあるかチェック
+      let hasDoing = false;
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key.indexOf("task_") !== 0) continue;
+        const parts = localStorage.getItem(key).split(",");
+        if (parts[3] === "doing") {
+          hasDoing = true;
+          break;
+        }
+      }
+
+      // doing があれば1秒ごとに再描画
+      if (hasDoing) {
+        tickTimer = setInterval(function () {
+          redraw();
+        }, 1000);
+      }
     }
 
 
     // -----------------------------------------
     // 4. ▶開始ボタン（一覧の中のボタン）
-    //    動的に作るボタンは $(document).on("click", ...) で受ける
     // -----------------------------------------
     $(document).on("click", ".btn-start", function () {
       const key = $(this).attr("data-key");
@@ -214,7 +351,7 @@
 
       const startTime = parseInt(parts[4]);
       const now = new Date().getTime();
-      const elapsedSec = Math.floor((now - startTime) / 1000); // 経過秒数
+      const elapsedSec = Math.floor((now - startTime) / 1000);
 
       // 状態を done に、実績秒を加算
       parts[3] = "done";
@@ -236,7 +373,33 @@
 
 
     // -----------------------------------------
-    // 7. ページ読み込み時：最初に一覧を表示
+    // 7. ダークモード切替
+    // -----------------------------------------
+    $("#themeToggle").on("click", function () {
+      const current = $("body").attr("data-theme");
+      if (current === "dark") {
+        $("body").attr("data-theme", "light");
+        $("#themeToggle").text("🌙");
+        localStorage.setItem("theme", "light");
+      } else {
+        $("body").attr("data-theme", "dark");
+        $("#themeToggle").text("☀️");
+        localStorage.setItem("theme", "dark");
+      }
+    });
+
+    // 起動時にテーマを復元
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme === "dark") {
+      $("body").attr("data-theme", "dark");
+      $("#themeToggle").text("☀️");
+    } else {
+      $("body").attr("data-theme", "light");
+    }
+
+
+    // -----------------------------------------
+    // 8. ページ読み込み時：最初に一覧を表示
     // -----------------------------------------
     redraw();
 

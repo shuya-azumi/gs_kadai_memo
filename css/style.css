@@ -1,35 +1,104 @@
+/* ===================================
+   CSS変数（テーマ切替の中核）
+   =================================== */
+body[data-theme="light"] {
+    --bg: #f7f7f9;
+    --bg-card: #ffffff;
+    --text: #333333;
+    --text-sub: #888888;
+    --border: #dddddd;
+    --border-soft: #f0f0f0;
+    --next-bg: #fff8e1;
+    --next-accent: #ffb300;
+    --total-bg: #e3f2fd;
+    --total-accent: #1976d2;
+    --summary-bg: #f0f4f8;
+    --doing-bg: #fff3e0;
+    --doing-border: #ff9800;
+    --done-bg: #f5f5f5;
+    --done-text: #888888;
+    --diff-over: #d33;
+    --diff-under: #2e7d32;
+    --diff-zero: #999;
+}
+
+body[data-theme="dark"] {
+    --bg: #1a1a1f;
+    --bg-card: #2a2a35;
+    --text: #e0e0e0;
+    --text-sub: #999999;
+    --border: #444450;
+    --border-soft: #333340;
+    --next-bg: #3a2f1a;
+    --next-accent: #ffb300;
+    --total-bg: #1a2a3a;
+    --total-accent: #64b5f6;
+    --summary-bg: #252530;
+    --doing-bg: #3a2f1a;
+    --doing-border: #ff9800;
+    --done-bg: #232328;
+    --done-text: #666666;
+    --diff-over: #ef5350;
+    --diff-under: #81c784;
+    --diff-zero: #777;
+}
+
+/* ===================================
+   ベース
+   =================================== */
 * {
     box-sizing: border-box;
 }
 
 body {
     font-family: "Hiragino Sans", "Yu Gothic", sans-serif;
-    color: #333;
-    background: #f7f7f9;
+    color: var(--text);
+    background: var(--bg);
+    transition: background 0.3s, color 0.3s;
+}
+
+.app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 90%;
+    margin: 30px auto 10px;
 }
 
 h1 {
     font-size: 30px;
-    text-align: center;
     font-weight: bold;
-    margin: 30px 0 10px;
+    margin: 0;
 }
 
 .subtitle {
-    text-align: center;
-    color: #888;
-    margin-bottom: 30px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid #ccc;
+    color: var(--text-sub);
+    margin: 5px 0 0;
+    font-size: 14px;
+}
+
+.theme-toggle {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    font-size: 22px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.theme-toggle:hover {
+    transform: rotate(20deg);
 }
 
 /* ===== 入力エリア ===== */
 .input-area {
     width: 90%;
-    margin: 5px auto 20px;
+    margin: 20px auto;
     padding: 20px;
-    background: #fff;
-    border: 1px solid #ccc;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
     border-radius: 10px;
     display: flex;
     gap: 10px;
@@ -48,20 +117,23 @@ h1 {
 
 .input-area select {
     flex: 1;
-    min-width: 100px;
+    min-width: 120px;
     font-size: 18px;
     padding: 10px;
-    border: 1px solid #ccc;
+    border: 1px solid var(--border);
     border-radius: 4px;
-    background: #fff;
+    background: var(--bg-card);
+    color: var(--text);
 }
 
 input {
     display: block;
     padding: 12px 10px;
-    border: 1px solid #ccc;
+    border: 1px solid var(--border);
     border-radius: 4px;
     font-size: 18px;
+    background: var(--bg-card);
+    color: var(--text);
 }
 
 /* ===== ボタン ===== */
@@ -73,13 +145,19 @@ input {
 }
 
 .button-area button {
-    border: 1px solid #ddd;
+    border: 1px solid var(--border);
     border-radius: 5px;
     flex: 1;
     height: 50px;
     font-size: 18px;
     cursor: pointer;
-    background: #fff;
+    background: var(--bg-card);
+    color: var(--text);
+    transition: transform 0.1s;
+}
+
+.button-area button:active {
+    transform: scale(0.97);
 }
 
 #add {
@@ -89,7 +167,7 @@ input {
 }
 
 #clear {
-    background: #fff;
+    background: var(--bg-card);
     color: #d33;
 }
 
@@ -98,39 +176,101 @@ input {
     width: 90%;
     margin: 10px auto;
     padding: 15px 20px;
-    background: #fff8e1;
-    border-left: 4px solid #ffb300;
+    background: var(--next-bg);
+    border-left: 4px solid var(--next-accent);
     border-radius: 4px;
     font-size: 18px;
+    color: var(--text);
 }
 
 .next-area .label {
-    color: #888;
+    color: var(--text-sub);
     margin-right: 10px;
 }
 
 #nextTaskName {
     font-weight: bold;
-    color: #333;
 }
 
 /* ===== 合計 ===== */
 .total-area {
     width: 90%;
-    margin: 10px auto 30px;
+    margin: 10px auto;
     padding: 15px 20px;
-    background: #e3f2fd;
+    background: var(--total-bg);
     border-radius: 4px;
     font-size: 16px;
     display: flex;
     gap: 15px;
     flex-wrap: wrap;
+    color: var(--text);
 }
 
 .total-area b {
     font-size: 20px;
-    color: #1976d2;
+    color: var(--total-accent);
 }
+
+/* ===== 種別ごとの集計バー ===== */
+.summary-area {
+    width: 90%;
+    margin: 10px auto 30px;
+    padding: 20px;
+    background: var(--summary-bg);
+    border-radius: 8px;
+}
+
+.summary-area h3 {
+    margin: 0 0 15px;
+    font-size: 16px;
+    color: var(--text-sub);
+}
+
+.bar-empty {
+    color: var(--text-sub);
+    font-size: 14px;
+    text-align: center;
+    padding: 10px;
+}
+
+.bar-row {
+    display: grid;
+    grid-template-columns: 90px 1fr 70px;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.bar-label {
+    font-size: 14px;
+    color: var(--text);
+}
+
+.bar-track {
+    height: 18px;
+    background: var(--border-soft);
+    border-radius: 9px;
+    overflow: hidden;
+}
+
+.bar-fill {
+    height: 100%;
+    border-radius: 9px;
+    transition: width 0.5s ease-out;
+}
+
+.bar-value {
+    font-size: 14px;
+    font-weight: bold;
+    text-align: right;
+    color: var(--text);
+}
+
+/* バーの色（cat-XXXの色を流用） */
+.bar-fill.cat-作業 { background: #4a90e2; }
+.bar-fill.cat-会議 { background: #e91e63; }
+.bar-fill.cat-雑務 { background: #9e9e9e; }
+.bar-fill.cat-休憩 { background: #4caf50; }
 
 /* ===== タスク一覧 ===== */
 #list {
@@ -141,8 +281,8 @@ input {
 }
 
 #list li {
-    background: #fff;
-    border: 1px solid #ddd;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
     border-radius: 6px;
     padding: 15px;
     margin-bottom: 10px;
@@ -150,16 +290,24 @@ input {
     align-items: center;
     gap: 15px;
     flex-wrap: wrap;
+    transition: background 0.3s, border-color 0.3s;
 }
 
 #list li.status-doing {
-    background: #fff3e0;
-    border-color: #ff9800;
+    background: var(--doing-bg);
+    border-color: var(--doing-border);
+    border-left-width: 4px;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255, 152, 0, 0.4); }
+    50%      { box-shadow: 0 0 0 6px rgba(255, 152, 0, 0); }
 }
 
 #list li.status-done {
-    background: #f5f5f5;
-    color: #888;
+    background: var(--done-bg);
+    color: var(--done-text);
 }
 
 #list li.status-done .name {
@@ -176,16 +324,17 @@ input {
 
 .cat {
     display: inline-block;
-    padding: 3px 8px;
+    padding: 3px 10px;
     border-radius: 12px;
     font-size: 12px;
     color: #fff;
+    white-space: nowrap;
 }
 
-.cat-作業    { background: #4a90e2; }
-.cat-会議    { background: #e91e63; }
-.cat-雑務    { background: #9e9e9e; }
-.cat-休憩    { background: #4caf50; }
+.cat-作業 { background: #4a90e2; }
+.cat-会議 { background: #e91e63; }
+.cat-雑務 { background: #9e9e9e; }
+.cat-休憩 { background: #4caf50; }
 
 .name {
     font-size: 18px;
@@ -194,14 +343,40 @@ input {
 
 .task-time {
     flex: 1;
-    color: #666;
+    color: var(--text-sub);
     font-size: 14px;
-    min-width: 150px;
+    min-width: 200px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
 }
 
 .task-time b {
-    color: #333;
+    color: var(--text);
     font-size: 16px;
+}
+
+/* 差分表示 */
+.diff {
+    font-size: 13px;
+    font-weight: bold;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.diff.over {
+    color: var(--diff-over);
+    background: rgba(211, 51, 51, 0.1);
+}
+
+.diff.under {
+    color: var(--diff-under);
+    background: rgba(46, 125, 50, 0.1);
+}
+
+.diff.zero {
+    color: var(--diff-zero);
 }
 
 .task-action {
@@ -211,27 +386,28 @@ input {
 
 .task-action button {
     padding: 8px 14px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--border);
     border-radius: 4px;
     font-size: 14px;
     cursor: pointer;
-    background: #fff;
+    background: var(--bg-card);
+    color: var(--text);
 }
 
 .btn-start {
     background: #4caf50 !important;
-    color: #fff;
+    color: #fff !important;
     border-color: #4caf50 !important;
 }
 
 .btn-stop {
     background: #f44336 !important;
-    color: #fff;
+    color: #fff !important;
     border-color: #f44336 !important;
 }
 
 .btn-del {
-    color: #999;
+    color: var(--text-sub) !important;
 }
 
 .done-mark {
@@ -242,9 +418,9 @@ input {
 
 footer {
     margin-top: 30px;
-    border-top: 1px solid #ccc;
+    border-top: 1px solid var(--border);
     padding: 20px 0;
     text-align: center;
-    color: #888;
+    color: var(--text-sub);
     font-size: 14px;
 }
