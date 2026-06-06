@@ -6,7 +6,7 @@
   <title>Task Timer - タスク時間管理アプリ</title>
   <script src="js/jquery-2.1.3.min.js"></script>
   <link rel="stylesheet" href="css/reset.css">
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css?v=4">
 </head>
 
 <body>
@@ -63,14 +63,13 @@
 
   <!-- ===== 右下に固定表示する丸型デジタルタイマー ===== -->
   <div id="floatingTimer" class="floating-timer">
-    <svg class="ft-ring" viewBox="0 0 120 120">
+    <svg class="ft-ring" viewBox="0 0 120 120" aria-hidden="true">
       <circle class="ft-ring-bg" cx="60" cy="60" r="54"></circle>
       <circle class="ft-ring-fg" id="ftRingFg" cx="60" cy="60" r="54"
               stroke-dasharray="339.292" stroke-dashoffset="339.292"
               transform="rotate(-90 60 60)"></circle>
     </svg>
     <div class="ft-content">
-      <div class="ft-label">RUNNING</div>
       <div class="ft-clock" id="ftClock">00:00</div>
       <div class="ft-name" id="ftName">タスク名</div>
     </div>
