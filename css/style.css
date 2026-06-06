@@ -62,8 +62,46 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    width: 90%;
-    margin: 30px auto 10px;
+    width: 94%;
+    max-width: 1400px;
+    margin: 30px auto 20px;
+}
+
+/* ===================================
+   2カラムレイアウト
+   =================================== */
+.layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+    gap: 24px;
+    width: 94%;
+    max-width: 1400px;
+    margin: 0 auto 40px;
+    align-items: start;
+}
+
+.col-left,
+.col-right {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+}
+
+/* 右カラムをスクロール時も追従させる */
+.col-right {
+    position: sticky;
+    top: 20px;
+}
+
+/* タブレット以下では縦並びに */
+@media (max-width: 900px) {
+    .layout {
+        grid-template-columns: 1fr;
+    }
+    .col-right {
+        position: static;
+    }
 }
 
 h1 {
@@ -95,8 +133,8 @@ h1 {
 
 /* ===== 入力エリア ===== */
 .input-area {
-    width: 90%;
-    margin: 20px auto;
+    width: 100%;
+    margin: 0;
     padding: 20px;
     background: var(--bg-card);
     border: 1px solid var(--border);
@@ -139,8 +177,8 @@ input {
 
 /* ===== ボタン ===== */
 .button-area {
-    width: 90%;
-    margin: 0 auto 20px;
+    width: 100%;
+    margin: 0;
     display: flex;
     gap: 10px;
 }
@@ -174,8 +212,8 @@ input {
 
 /* ===== 次のタスク ===== */
 .next-area {
-    width: 90%;
-    margin: 10px auto;
+    width: 100%;
+    margin: 0;
     padding: 15px 20px;
     background: var(--next-bg);
     border-left: 4px solid var(--next-accent);
@@ -193,38 +231,68 @@ input {
     font-weight: bold;
 }
 
-/* ===== 合計 ===== */
+/* ===== 合計（右カラム上部） ===== */
 .total-area {
-    width: 90%;
-    margin: 10px auto;
-    padding: 15px 20px;
+    width: 100%;
+    margin: 0;
+    padding: 20px;
     background: var(--total-bg);
-    border-radius: 4px;
-    font-size: 16px;
+    border-radius: 10px;
+    color: var(--text);
+}
+
+.total-area h3 {
+    margin: 0 0 12px;
+    font-size: 14px;
+    color: var(--text-sub);
+    letter-spacing: 1px;
+    font-weight: 600;
+}
+
+.total-line {
     display: flex;
-    gap: 15px;
-    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 6px 0;
+}
+
+.total-key {
+    font-size: 14px;
+    color: var(--text-sub);
+}
+
+.total-val {
     color: var(--text);
 }
 
 .total-area b {
-    font-size: 20px;
+    font-size: 28px;
     color: var(--total-accent);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
 }
 
-/* ===== 種別ごとの集計バー ===== */
+.total-val .unit {
+    font-size: 13px;
+    color: var(--text-sub);
+    margin-left: 4px;
+}
+
+/* ===== 種別ごとの集計バー（右カラム下部） ===== */
 .summary-area {
-    width: 90%;
-    margin: 10px auto 30px;
+    width: 100%;
+    margin: 0;
     padding: 20px;
     background: var(--summary-bg);
-    border-radius: 8px;
+    border-radius: 10px;
 }
 
 .summary-area h3 {
     margin: 0 0 15px;
-    font-size: 16px;
+    font-size: 14px;
     color: var(--text-sub);
+    letter-spacing: 1px;
+    font-weight: 600;
 }
 
 .bar-empty {
@@ -236,7 +304,7 @@ input {
 
 .bar-row {
     display: grid;
-    grid-template-columns: 90px 1fr 70px;
+    grid-template-columns: 60px 1fr 60px;
     align-items: center;
     gap: 10px;
     margin-bottom: 10px;
@@ -275,8 +343,8 @@ input {
 
 /* ===== タスク一覧 ===== */
 #list {
-    width: 90%;
-    margin: 20px auto 50px;
+    width: 100%;
+    margin: 0;
     list-style: none;
     padding: 0;
 }
@@ -418,8 +486,9 @@ input {
 }
 
 footer {
-    margin-top: 30px;
-    margin-bottom: 220px; /* フローティング時計と被らないよう余白 */
+    width: 94%;
+    max-width: 1400px;
+    margin: 30px auto 60px;
     border-top: 1px solid var(--border);
     padding: 20px 0;
     text-align: center;
