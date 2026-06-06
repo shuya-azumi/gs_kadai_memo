@@ -12,10 +12,10 @@
 <body>
   <header class="app-header">
     <div>
-      <h1>🕐 Task Timer</h1>
-      <p class="subtitle">今日やることを登録して、ボタンひとつで時間を記録しよう</p>
+      <h1>Task Timer</h1>
+      <p class="subtitle">今日やることを登録して、ボタンひとつで時間を記録</p>
     </div>
-    <button id="themeToggle" class="theme-toggle">🌙</button>
+    <button id="themeToggle" class="theme-toggle" title="テーマ切替">🌙</button>
   </header>
 
   <main>
@@ -24,10 +24,10 @@
       <input id="taskName" type="text" placeholder="タスク名（例：資料作成）">
       <input id="estimate" type="number" placeholder="予定(分)" min="1" value="30">
       <select id="category">
-        <option value="作業">💼 作業</option>
-        <option value="会議">🤝 会議</option>
-        <option value="雑務">📦 雑務</option>
-        <option value="休憩">☕ 休憩</option>
+        <option value="作業">作業</option>
+        <option value="会議">会議</option>
+        <option value="雑務">雑務</option>
+        <option value="休憩">休憩</option>
       </select>
     </div>
 
@@ -38,20 +38,20 @@
 
     <!-- ===== 次のタスク表示 ===== -->
     <div id="nextTask" class="next-area">
-      <span class="label">👉 次のタスク：</span>
+      <span class="label">次のタスク</span>
       <span id="nextTaskName">なし</span>
     </div>
 
     <!-- ===== 合計表示 ===== -->
     <div class="total-area">
-      <span>📊 本日合計：</span>
+      <span class="total-label">本日合計</span>
       <span>予定 <b id="totalEstimate">0</b> 分</span>
       <span>/ 実績 <b id="totalActual">0</b> 分</span>
     </div>
 
     <!-- ===== 種別ごとの集計バー ===== -->
     <div class="summary-area">
-      <h3>📈 種別ごとの集計（実績）</h3>
+      <h3>種別ごとの集計（実績）</h3>
       <div id="categoryBars"></div>
     </div>
   </main>
@@ -61,15 +61,23 @@
     <!-- ここに追加データが挿入される -->
   </ul>
 
-  <!-- ===== 右下に固定表示するデジタルタイマー ===== -->
+  <!-- ===== 右下に固定表示する丸型デジタルタイマー ===== -->
   <div id="floatingTimer" class="floating-timer">
-    <div class="ft-label">▶ 計測中</div>
-    <div class="ft-name" id="ftName">タスク名</div>
-    <div class="ft-clock" id="ftClock">00:00:00</div>
+    <svg class="ft-ring" viewBox="0 0 120 120">
+      <circle class="ft-ring-bg" cx="60" cy="60" r="54"></circle>
+      <circle class="ft-ring-fg" id="ftRingFg" cx="60" cy="60" r="54"
+              stroke-dasharray="339.292" stroke-dashoffset="339.292"
+              transform="rotate(-90 60 60)"></circle>
+    </svg>
+    <div class="ft-content">
+      <div class="ft-label">RUNNING</div>
+      <div class="ft-clock" id="ftClock">00:00</div>
+      <div class="ft-name" id="ftName">タスク名</div>
+    </div>
   </div>
 
   <footer>
-    🤖 Built with <a href="https://claude.com/claude-code" target="_blank" rel="noopener">Claude Code</a>
+    <span>Task Timer</span>
   </footer>
 
   <!-- ===== JavaScript ===== -->
@@ -84,16 +92,10 @@
     // 状態 : todo / doing / done
     // ============================================
 
-    // 種別の絵文字アイコン
-    const CATEGORY_ICONS = {
-      "作業": "💼",
-      "会議": "🤝",
-      "雑務": "📦",
-      "休憩": "☕"
-    };
-
     // リアルタイムタイマー用の変数
     let tickTimer = null;
+    // doing 中タスクの予定時間（秒）。進捗リング計算用
+    let doingEstimateSec = 0;
 
 
     // -----------------------------------------
@@ -201,7 +203,7 @@
         } else if (status === "doing") {
           buttonHtml = `<button class="btn-stop" data-key="${key}">⏹ 終了</button>`;
         } else {
-          buttonHtml = `<span class="done-mark">✅ 完了</span>`;
+          buttonHtml = `<span class="done-mark">完了</span>`;
         }
 
         // 実績の表示（doing中はリアルタイムで経過分を加算）
@@ -217,21 +219,18 @@
         if (status !== "todo") {
           const diffMin = (displayActualSec / 60) - estimate;
           if (diffMin > 0.5) {
-            diffHtml = `<span class="diff over">+${diffMin.toFixed(1)}分 ⚠️</span>`;
+            diffHtml = `<span class="diff over">+${diffMin.toFixed(1)}分</span>`;
           } else if (diffMin < -0.5) {
-            diffHtml = `<span class="diff under">${diffMin.toFixed(1)}分 ✨</span>`;
+            diffHtml = `<span class="diff under">${diffMin.toFixed(1)}分</span>`;
           } else {
             diffHtml = `<span class="diff zero">±0分</span>`;
           }
         }
 
-        // 種別アイコン
-        const icon = CATEGORY_ICONS[category] || "📝";
-
         const html = `
           <li class="status-${status}" data-key="${key}">
             <div class="task-main">
-              <span class="cat cat-${category}">${icon} ${category}</span>
+              <span class="cat cat-${category}">${category}</span>
               <span class="name">${name}</span>
             </div>
             <div class="task-time">
@@ -284,11 +283,10 @@
         const stat = categoryStats[cat];
         const minutes = (stat.actualSec / 60).toFixed(1);
         const percent = (stat.actualSec / maxSec) * 100;
-        const icon = CATEGORY_ICONS[cat] || "📝";
 
         const barHtml = `
           <div class="bar-row">
-            <div class="bar-label">${icon} ${cat}</div>
+            <div class="bar-label">${cat}</div>
             <div class="bar-track">
               <div class="bar-fill cat-${cat}" style="width:${percent}%"></div>
             </div>
@@ -315,12 +313,14 @@
       let doingName = "";
       let doingStartTime = 0;
       let doingActualSec = 0;
+      let doingEstimateMin = 0;
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
         if (key.indexOf("task_") !== 0) continue;
         const parts = localStorage.getItem(key).split(",");
         if (parts[3] === "doing") {
           doingName = parts[0];
+          doingEstimateMin = parseInt(parts[1]);
           doingStartTime = parseInt(parts[4]);
           doingActualSec = parseInt(parts[5]);
           break;
@@ -332,6 +332,9 @@
         $("#floatingTimer").removeClass("active");
         return;
       }
+
+      // 予定秒数を保存（リング描画用）
+      doingEstimateSec = doingEstimateMin * 60;
 
       // フローティング時計を表示
       $("#floatingTimer").addClass("active");
@@ -351,17 +354,44 @@
     }
 
 
-    // 経過時間を HH:MM:SS で表示
+    // 経過時間を時計に表示し、進捗リングを更新
     function updateClock(startTime, baseSec) {
       const elapsedSec = Math.floor((new Date().getTime() - startTime) / 1000);
       const totalSec = baseSec + elapsedSec;
+
+      // 1時間未満は MM:SS、超えたら H:MM:SS
       const h = Math.floor(totalSec / 3600);
       const m = Math.floor((totalSec % 3600) / 60);
       const s = totalSec % 60;
-      const hh = String(h).padStart(2, "0");
       const mm = String(m).padStart(2, "0");
       const ss = String(s).padStart(2, "0");
-      $("#ftClock").text(hh + ":" + mm + ":" + ss);
+      let timeStr;
+      if (h > 0) {
+        timeStr = h + ":" + mm + ":" + ss;
+      } else {
+        timeStr = mm + ":" + ss;
+      }
+      $("#ftClock").text(timeStr);
+
+      // 進捗リング（円周 = 2π × r = 2π × 54 ≒ 339.292）
+      const circumference = 339.292;
+      let progress = 0;
+      if (doingEstimateSec > 0) {
+        progress = totalSec / doingEstimateSec;
+      }
+      // 0〜1の範囲にクランプ
+      let cappedProgress = progress;
+      if (cappedProgress > 1) cappedProgress = 1;
+      if (cappedProgress < 0) cappedProgress = 0;
+      const offset = circumference * (1 - cappedProgress);
+      $("#ftRingFg").attr("stroke-dashoffset", offset);
+
+      // 予定オーバーで色変え
+      if (progress > 1) {
+        $("#floatingTimer").addClass("over");
+      } else {
+        $("#floatingTimer").removeClass("over");
+      }
 
       // 一覧側の実績表示も同期更新（doing行のみ）
       const actualMin = (totalSec / 60).toFixed(1);
